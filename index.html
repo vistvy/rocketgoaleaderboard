@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rocket Goal.io Ranked Leaderboards</title>
+<link rel="icon" href="favicon.ico">
+<style>
+
+*{
+  font-weight:bold;
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  color:white;
+  padding:20px;
+  position:relative;
+}
+
+.bg{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+
+  background:url("https://i.imgur.com/xQlQsi4.png");
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+
+  filter:blur(5.5px) brightness(0.9);
+
+  z-index:-1;
+  pointer-events:none;
+}
+
+.login-box{
+  position:fixed;
+  top:10px;
+  right:10px;
+  display:flex;
+  gap:6px;
+  align-items:center;
+  z-index:999;
+}
+
+.login-box button{
+  padding:5px 8px;
+  font-size:11px;
+  border:none;
+  border-radius:6px;
+  background:#0ea5e9;
+  color:white;
+  cursor:pointer;
+}
+
+.flagIcon{
+  width:22px;
+  height:16px;
+  object-fit:contain;
+  vertical-align:middle;
+  margin-right:4px;
+  border-radius:2px;
+}
+
+.playerIcon{
+  width:18px;
+  height:18px;
+  object-fit:cover;
+  vertical-align:middle;
+  margin-left:4px;
+  border-radius:4px;
+}
+
+.playerName{
+  display:inline-block;
+}
+
+.icon-key{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+
+  margin-bottom:20px;
+
+  background:#0a0a0a;
+  border-radius:14px;
+  padding:12px;
+}
+
+.icon-key-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+
+  background:#111;
+  padding:6px 10px;
+  border-radius:10px;
+}
+
+.icon-key-item img{
+  width:18px;
+  height:18px;
+  border-radius:4px;
+}
+
+.container{
+  max-width:400px;
+  margin:auto;
+  padding-top:40px;
+}
+
+h1{
+  text-align:center;
+  color:#ffffff;
+  margin-bottom:25px;
+  text-shadow:
+    0 0 4px black,
+    0 0 4px black,
+    0 0 4px black;
+}
+
+.tabs{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+.tabs button{
+  padding:10px 16px;
+  border:none;
+  border-radius:10px;
+  background:#111;
+  color:white;
+  cursor:pointer;
+}
+
+.tabs button.active{
+  background:#0ea5e9;
+}
+
+.board{
+  display:none;
+}
+
+.board.active{
+  display:block;
+}
+
+.table-box{
+  background:#0a0a0a;
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 0 20px rgba(0,0,0,0.8);
+}
+
+h2{
+  text-align:center;
+  color:#38bdf8;
+}
+
+.table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.table th{
+  background:#111;
+  padding:12px;
+}
+
+.table td{
+  background:#0f0f0f;
+  padding:10px;
+  text-align:center;
+}
+
+.table tr:nth-child(even) td{
+  background:#151515;
+}
+
+.top1{
+  color:gold;
+}
+
+.top2{
+  color:silver;
+}
+
+.top3{
+  color:#cd7f32;
+}
+
+.admin-box{
+  display:none;
+  position:fixed;
+  right:20px;
+  top:80px;
+  width:260px;
+
+  background:#0a0a0a;
+  border-radius:15px;
+  padding:15px;
+
+  box-shadow:0 0 20px rgba(0,0,0,0.8);
+}
+
+.edit-box{
+  display:none;
+  position:fixed;
+  right:20px;
+  top:440px;
+
+  width:260px;
+
+  background:#0a0a0a;
+  border-radius:15px;
+  padding:15px;
+
+  box-shadow:0 0 20px rgba(0,0,0,0.8);
+}
+
+input,select{
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  margin:4px;
+  background:#111;
+  color:white;
+}
+
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:8px;
+  background:#38bdf8;
+  color:white;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#0ea5e9;
+}
+
+.action-btn{
+  padding:6px 10px;
+  font-size:12px;
+}
+
+.note{
+  text-align:center;
+  margin-top:15px;
+  opacity:0.6;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="bg"></div>
+
+<!-- LOGIN -->
+<div class="login-box">
+  <button onclick="login()">Admin Login</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+<h1>🚀 Rocket Goal.io Ranked Leaderboards</h1>
+<div class="icon-key" id="iconKey"></div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showBoard('1v1', event)">1v1</button>
+  <button class="tab-btn" onclick="showBoard('2v2', event)">2v2</button>
+  <button class="tab-btn" onclick="showBoard('3v3', event)">3v3</button>
+</div>
+
+<!-- 1v1 -->
+<div id="1v1" class="board active">
+<div class="table-box">
+<h2>1v1 Ranked</h2>
+
+<table class="table">
+<thead>
+<tr>
+<th>Rank</th>
+<th>Player</th>
+<th>MMR</th>
+<th class="actions-header" style="display:none;">Actions</th>
+</tr>
+</thead>
+
+<tbody id="board1v1"></tbody>
+
+</table>
+</div>
+</div>
+
+<!-- 2v2 -->
+<div id="2v2" class="board">
+<div class="table-box">
+<h2>2v2 Ranked</h2>
+
+<table class="table">
+<thead>
+<tr>
+<th>Rank</th>
+<th>Player</th>
+<th>MMR</th>
+<th class="actions-header" style="display:none;">Actions</th>
+</tr>
+</thead>
+
+<tbody id="board2v2"></tbody>
+
+</table>
+</div>
+</div>
+
+<!-- 3v3 -->
+<div id="3v3" class="board">
+<div class="table-box">
+<h2>3v3 Ranked</h2>
+
+<table class="table">
+<thead>
+<tr>
+<th>Rank</th>
+<th>Player</th>
+<th>MMR</th>
+<th class="actions-header" style="display:none;">Actions</th>
+</tr>
+</thead>
+
+<tbody id="board3v3"></tbody>
+
+</table>
+</div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-box" id="adminBox">
+
+<h2>Admin Panel</h2>
+
+<select id="playlist">
+<option value="1v1">1v1</option>
+<option value="2v2">2v2</option>
+<option value="3v3">3v3</option>
+</select>
+
+<input type="text" id="playerName" placeholder="Player Name">
+
+<input type="number" id="playerMMR" placeholder="MMR">
+
+<input type="text" id="playerFlag" placeholder="Flag Image URL">
+
+<input type="text" id="playerIcons" placeholder="Icon URLs separated by commas">
+
+<input type="color" id="playerGlowColor" value="#ffffff">
+
+<input
+  type="range"
+  id="playerGlowStrength"
+  min="0"
+  max="50"
+  value="0"
+>
+
+<br><br>
+
+<button onclick="addPlayer()">Add Player</button>
+
+<hr style="margin:15px 0; border-color:#222;">
+
+<h3>Icon Key</h3>
+
+<input
+  type="text"
+  id="iconKeyURL"
+  placeholder="Icon URL"
+>
+
+<input
+  type="text"
+  id="iconKeyLabel"
+  placeholder="What the icon means"
+>
+
+<button onclick="addIconKey()">
+  Add Icon
+</button>
+
+</div>
+
+<!-- EDIT PANEL -->
+<div class="edit-box" id="editBox">
+
+<h2>Edit Player</h2>
+
+<input type="text" id="editName" placeholder="Player Name">
+
+<input type="number" id="editMMR" placeholder="MMR">
+
+<input type="text" id="editFlag" placeholder="Flag Image URL">
+
+<input type="text" id="editIcons" placeholder="Icon URLs separated by commas">
+
+<input type="color" id="editGlowColor" value="#ffffff">
+
+<input
+  type="range"
+  id="editGlowStrength"
+  min="0"
+  max="50"
+  value="0"
+>
+
+<br><br>
+
+<button onclick="saveEdit()">Save Changes</button>
+
+</div>
+
+<p class="note" style="opacity:1; color:white; text-shadow:0 0 3px black;">
+  Created by Vistvy
+  <br><br>
+  If you want to be added to the leaderboard, or need your ranking updated, mention @vistvy or @pal153 in the
+  <a href="https://discord.gg/DueTkZdxEB" target="_blank" style="color:#38bdf8; text-decoration:underline;">
+    Rocket Goal Discord
+  </a>!
+</p>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  deleteDoc,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB0EuuEkpVMjDcZ9-BSg27ioP5oZ866vqg",
+  authDomain: "rglb-db9d1.firebaseapp.com",
+  projectId: "rglb-db9d1",
+  storageBucket: "rglb-db9d1.firebasestorage.app",
+  messagingSenderId: "426022077306",
+  appId: "1:426022077306:web:429414c324c21320674cc3",
+  measurementId: "G-88T9T321RQ"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+const auth = getAuth(app);
+
+const provider = new GoogleAuthProvider();
+
+const leaderboardRef = collection(db,"leaderboard");
+
+const iconKeyRef = collection(db,"iconKey");
+
+/* PUT YOUR EMAILS HERE */
+const adminEmails = [
+  "c.emotimi@gmail.com",
+  "underflagfg@gmail.com"
+];
+
+let admin = false;
+
+let editingPlayerId = null;
+
+window.login = async function(){
+
+  try{
+
+    await signInWithPopup(auth, provider);
+
+  } catch(err){
+
+    alert(err.message);
+
+  }
+
+}
+
+window.logout = async function(){
+
+  await signOut(auth);
+
+}
+
+onAuthStateChanged(auth,(user)=>{
+
+  if(user && adminEmails.includes(user.email)){
+
+    admin = true;
+
+    document.getElementById("adminBox").style.display = "block";
+
+    document
+      .querySelectorAll(".actions-header")
+      .forEach(h=>h.style.display="table-cell");
+
+  } else {
+
+    admin = false;
+
+    document.getElementById("adminBox").style.display = "none";
+
+    document.getElementById("editBox").style.display = "none";
+
+    document
+      .querySelectorAll(".actions-header")
+      .forEach(h=>h.style.display="none");
+
+  }
+
+
+});
+window.addIconKey = async function(){
+
+  if(!admin) return;
+
+  const icon =
+    document.getElementById("iconKeyURL").value;
+
+  const label =
+    document.getElementById("iconKeyLabel").value;
+
+  if(!icon || !label) return;
+
+  await addDoc(iconKeyRef,{
+    icon,
+    label
+  });
+
+}
+
+window.deleteIconKey = async function(id){
+
+  if(!admin) return;
+
+  await deleteDoc(doc(db,"iconKey",id));
+
+}
+
+onSnapshot(iconKeyRef,(snap)=>{
+
+  const keyDiv =
+    document.getElementById("iconKey");
+
+  keyDiv.innerHTML = "";
+
+  snap.forEach(d=>{
+
+    const item = d.data();
+
+    keyDiv.innerHTML += `
+
+      <div class="icon-key-item">
+
+        <img src="${item.icon}">
+
+        <span>${item.label}</span>
+
+        ${
+          admin
+          ? `
+            <button
+              class="action-btn"
+              onclick="deleteIconKey('${d.id}')"
+            >
+              X
+            </button>
+          `
+          : ""
+        }
+
+      </div>
+
+    `;
+
+  });
+
+});
+
+window.showBoard = function(mode,event){
+
+  document
+    .querySelectorAll(".board")
+    .forEach(b=>b.classList.remove("active"));
+
+  document
+    .getElementById(mode)
+    .classList.add("active");
+
+  document
+    .querySelectorAll(".tab-btn")
+    .forEach(b=>b.classList.remove("active"));
+
+  event.target.classList.add("active");
+
+}
+
+window.addPlayer = async function(){
+
+  if(!admin) return;
+
+  const playlist =
+    document.getElementById("playlist").value;
+
+  const name =
+    document.getElementById("playerName").value;
+
+  const mmr =
+    Number(document.getElementById("playerMMR").value);
+
+  const flag =
+    document.getElementById("playerFlag").value;
+    
+  const icons =
+    document.getElementById("playerIcons").value;
+
+  const glowColor =
+    document.getElementById("playerGlowColor").value;
+
+  const glowStrength =
+    Number(document.getElementById("playerGlowStrength").value);
+
+  if(name && mmr >= 0){
+
+    await addDoc(leaderboardRef,{
+      playlist,
+      name,
+      mmr,
+      flag,
+      icons,
+      glowColor,
+      glowStrength
+    });
+
+  }
+
+}
+
+window.deletePlayer = async function(id){
+
+  if(!admin) return;
+
+  await deleteDoc(doc(db,"leaderboard",id));
+
+}
+
+window.openEdit = function(
+  id,
+  name,
+  mmr,
+  flag,
+  icons,
+  glowColor,
+  glowStrength
+){
+
+  if(!admin) return;
+
+  editingPlayerId = id;
+
+  document.getElementById("editBox").style.display = "block";
+
+  document.getElementById("editName").value = name;
+
+  document.getElementById("editMMR").value = mmr;
+
+  document.getElementById("editFlag").value = flag || "";
+  
+  document.getElementById("editIcons").value =
+    icons || "";
+
+  document.getElementById("editGlowColor").value =
+    glowColor || "#ffffff";
+  
+  document.getElementById("editGlowStrength").value =
+    glowStrength || 0;
+
+}
+
+window.saveEdit = async function(){
+
+  if(!admin || !editingPlayerId) return;
+
+  const name =
+    document.getElementById("editName").value;
+
+  const mmr =
+    Number(document.getElementById("editMMR").value);
+
+  const flag =
+    document.getElementById("editFlag").value;
+    
+  const icons =
+    document.getElementById("editIcons").value;
+
+  const glowColor =
+    document.getElementById("editGlowColor").value;
+  
+  const glowStrength =
+    Number(document.getElementById("editGlowStrength").value);
+
+  await updateDoc(doc(db,"leaderboard",editingPlayerId),{
+    name,
+    mmr,
+    flag,
+    icons,
+    glowColor,
+    glowStrength
+});
+
+  document.getElementById("editBox").style.display = "none";
+
+}
+
+onSnapshot(leaderboardRef,(snap)=>{
+
+  const boards = {
+    "1v1":[],
+    "2v2":[],
+    "3v3":[]
+  };
+
+  snap.forEach(d=>{
+
+    const x = d.data();
+
+    boards[x.playlist].push({
+      id:d.id,
+      ...x
+    });
+
+  });
+
+  Object.keys(boards).forEach(mode=>{
+
+    boards[mode].sort((a,b)=>b.mmr-a.mmr);
+
+    const table =
+      document.getElementById(`board${mode}`);
+
+    table.innerHTML = "";
+
+    boards[mode].forEach((player,index)=>{
+
+      let rankClass =
+        index===0 ? "top1" :
+        index===1 ? "top2" :
+        index===2 ? "top3" : "";
+
+      const iconHTML =
+        player.icons
+          ? player.icons
+              .split(",")
+              .map(icon => `
+                <img
+                  class="playerIcon"
+                  src="${icon.trim()}"
+                >
+              `)
+              .join("")
+          : "";
+      
+      const displayName = `
+      
+        ${player.flag
+          ? `<img class="flagIcon" src="${player.flag}" alt="">`
+          : ""
+        }
+      
+        <span
+          class="playerName"
+          style="
+            ${player.glowStrength > 0
+            ? `text-shadow: 0 0 ${player.glowStrength}px ${player.glowColor || "#ffffff"};`
+            : ""
+  }
+"
+        >
+          ${player.name}
+        </span>
+      
+        ${iconHTML}
+
+`;
+
+      if(admin){
+
+        table.innerHTML += `
+        <tr>
+
+          <td class="${rankClass}">
+            #${index+1}
+          </td>
+
+          <td class="${rankClass}">
+            ${displayName}
+          </td>
+
+          <td class="${rankClass}">
+            ${player.mmr}
+          </td>
+
+          <td>
+
+            <button
+              class="action-btn"
+              onclick="openEdit(
+                '${player.id}',
+                '${player.name}',
+                ${player.mmr},
+                '${player.flag || ""}',
+                '${player.icons || ""}',
+                '${player.glowColor || "#ffffff"}',
+                ${player.glowStrength || 15}
+              )"
+            >
+              Edit
+            </button>
+
+            <button
+              class="action-btn"
+              onclick="deletePlayer('${player.id}')"
+            >
+              Remove
+            </button>
+
+          </td>
+
+        </tr>`;
+
+      } else {
+
+        table.innerHTML += `
+        <tr>
+
+          <td class="${rankClass}">
+            #${index+1}
+          </td>
+
+          <td class="${rankClass}">
+            ${displayName}
+          </td>
+
+          <td class="${rankClass}">
+            ${player.mmr}
+          </td>
+
+        </tr>`;
+
+      }
+
+    });
+
+  });
+
+});
+
+</script>
+
+</body>
+</html>
