@@ -68,8 +68,8 @@ body{
 }
 
 .playerIcon{
-  width:18px;
-  height:18px;
+  width:var(--icon-size,18px);
+  height:var(--icon-size,18px);
   object-fit:cover;
   vertical-align:middle;
   margin-left:4px;
@@ -274,7 +274,7 @@ button:hover{
 
 <div class="container">
 
-<h1>🚀 Rocket Goal.io Ranked Leaderboards</h1>
+<h1>Rocket Goal.io Ranked Leaderboards</h1>
 <div class="icon-key" id="iconKey"></div>
 
 <div class="tabs">
@@ -365,6 +365,12 @@ button:hover{
 
 <input type="text" id="playerIcons" placeholder="Icon URLs separated by commas">
 
+<input
+  type="number"
+  id="playerIconSize"
+  placeholder="Icon Size (18 default)"
+>
+
 <input type="color" id="playerGlowColor" value="#ffffff">
 
 <input
@@ -413,6 +419,12 @@ button:hover{
 <input type="text" id="editFlag" placeholder="Flag Image URL">
 
 <input type="text" id="editIcons" placeholder="Icon URLs separated by commas">
+
+<input
+  type="number"
+  id="editIconSize"
+  placeholder="Icon Size"
+>
 
 <input type="color" id="editGlowColor" value="#ffffff">
 
@@ -663,6 +675,7 @@ window.addPlayer = async function(){
       icons,
       glowColor,
       glowStrength
+      iconSize
     });
 
   }
@@ -684,8 +697,9 @@ window.openEdit = function(
   flag,
   icons,
   glowColor,
-  glowStrength
-){
+  glowStrength,
+  iconSize
+)
 
   if(!admin) return;
 
@@ -701,6 +715,9 @@ window.openEdit = function(
   
   document.getElementById("editIcons").value =
     icons || "";
+    
+  document.getElementById("editIconSize").value =
+    iconSize || 18;
 
   document.getElementById("editGlowColor").value =
     glowColor || "#ffffff";
@@ -728,9 +745,15 @@ window.saveEdit = async function(){
 
   const glowColor =
     document.getElementById("editGlowColor").value;
+    
+  const iconSize =
+    Number(document.getElementById("playerIconSize").value) || 18;
   
   const glowStrength =
     Number(document.getElementById("editGlowStrength").value);
+    
+  const iconSize =
+    Number(document.getElementById("editIconSize").value) || 18;
 
   await updateDoc(doc(db,"leaderboard",editingPlayerId),{
     name,
@@ -788,6 +811,7 @@ onSnapshot(leaderboardRef,(snap)=>{
                 <img
                   class="playerIcon"
                   src="${icon.trim()}"
+                  style="--icon-size:${player.iconSize || 18}px"
                 >
               `)
               .join("")
@@ -844,7 +868,8 @@ onSnapshot(leaderboardRef,(snap)=>{
                 '${player.flag || ""}',
                 '${player.icons || ""}',
                 '${player.glowColor || "#ffffff"}',
-                ${player.glowStrength || 15}
+                ${player.glowStrength || 15},
+                ${player.iconSize || 18}
               )"
             >
               Edit
