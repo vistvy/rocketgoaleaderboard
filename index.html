@@ -274,7 +274,7 @@ button:hover{
 
 <div class="container">
 
-<h1>Rocket Goal.io Ranked Leaderboards</h1>
+<h1>🚀 Rocket Goal.io Ranked Leaderboards</h1>
 <div class="icon-key" id="iconKey"></div>
 
 <div class="tabs">
@@ -658,6 +658,9 @@ window.addPlayer = async function(){
     
   const icons =
     document.getElementById("playerIcons").value;
+    
+  const iconSize =
+    Number(document.getElementById("playerIconSize").value) || 18;
 
   const glowColor =
     document.getElementById("playerGlowColor").value;
@@ -674,7 +677,7 @@ window.addPlayer = async function(){
       flag,
       icons,
       glowColor,
-      glowStrength
+      glowStrength,
       iconSize
     });
 
@@ -699,7 +702,7 @@ window.openEdit = function(
   glowColor,
   glowStrength,
   iconSize
-)
+){
 
   if(!admin) return;
 
@@ -746,9 +749,6 @@ window.saveEdit = async function(){
   const glowColor =
     document.getElementById("editGlowColor").value;
     
-  const iconSize =
-    Number(document.getElementById("playerIconSize").value) || 18;
-  
   const glowStrength =
     Number(document.getElementById("editGlowStrength").value);
     
@@ -761,7 +761,8 @@ window.saveEdit = async function(){
     flag,
     icons,
     glowColor,
-    glowStrength
+    glowStrength,
+    iconSize
 });
 
   document.getElementById("editBox").style.display = "none";
